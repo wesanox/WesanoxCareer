@@ -119,6 +119,8 @@ class WesanoxCareer extends WireData implements Module
                 $this->files->mkdir($this->config->paths->templates . 'includes/career/');
             } elseif(!is_dir($this->config->paths->templates . 'includes/career/')) {
                 $this->files->mkdir($this->config->paths->templates . 'includes/career/');
+            } elseif(!is_dir($this->config->paths->templates . 'includes/career/')) {
+                $this->files->mkdir($this->config->paths->templates . 'includes/career/');
             }
 
             if (!is_file($file_target)) {
