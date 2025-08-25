@@ -33,9 +33,11 @@ class WesanoxCareer extends WireData implements Module
     ];
 
     /**
+     * @var Module|_Module|null $helper_classes
      * @var Module|_Module|null $helper_fields
      */
     protected Module|_Module|null $helper_fields;
+    protected Module|_Module|null $helper_classes;
 
     /**
      * @var array $fields_array
@@ -74,6 +76,7 @@ class WesanoxCareer extends WireData implements Module
     {
         parent::__construct();
 
+        $this->helper_classes = $this->modules->get('WesanoxHelperClasses');
         $this->helper_fields = $this->modules->get('WesanoxHelperFields');
 
         $this->fields_array = include $this->config->paths->WesanoxCareer . 'config/fields.php';
