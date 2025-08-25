@@ -1,0 +1,284 @@
+<?php
+
+namespace ProcessWire;
+
+class WesanoxCareer extends WireData implements Module
+{
+    public static function getModuleInfo()
+    {
+        return array(
+            'title' => 'wesanox Career',
+            'summary' => 'The Career Module for Processwire. It installs some Career features to the page.',
+            'version' => '0.1.1',
+            'author' => 'Frittenfritze',
+            'href' => 'https://wesanox.de',
+            'icon' => 'users',
+            'singular' => true,
+            'autoload' => true,
+            'requires' => array(
+                'ProcessWire>=3.0.210',
+                'PHP>=8.0.0',
+                'WesanoxMatrixBasic>=0.1.1',
+                'WesanoxMenuBuilder>=0.0.1'
+            ),
+        );
+    }
+
+    /**
+     * @var array|string[] $external_modules
+     */
+    protected array $external_modules = [
+        'WesanoxMatrixBasic' => 'https://github.com/wesanox/WesanoxMatrixBasic/archive/refs/heads/main.zip',
+        'WesanoxMenuBuilder' => 'https://github.com/wesanox/WesanoxMenuBuilder/archive/refs/heads/main.zip',
+    ];
+
+    /**
+     * @var Module|_Module|null $helper_fields
+     */
+    protected Module|_Module|null $helper_fields;
+
+    /**
+     * @var array $fields_array
+     */
+    protected array $fields_array = [];
+
+    /**
+     * @var array $templates_career
+     */
+    protected array $templates_career = [
+        'career',
+        'career_summary',
+        'career_job'
+    ];
+
+    /**
+     * @var array $sections
+     */
+    protected array $sections = [
+        'career_header',
+        'career_breadcrumb',
+        'career_menu',
+    ];
+
+    /**
+     * @var array $matrix_basic_items
+     */
+    protected array $matrix_basic_items = [
+        'basic_teaser_career',
+    ];
+
+    /**
+     * @throws WirePermissionException
+     */
+    function __construct()
+    {
+        parent::__construct();
+
+        $this->helper_fields = $this->modules->get('WesanoxHelperFields');
+
+        $this->fields_array = include $this->config->paths->WesanoxCareer . 'config/fields.php';
+    }
+
+    /**
+     * install method
+     *
+     * @return void
+     * @throws WireException
+     */
+    public function ___install(): void
+    {
+        /**
+         * Install external modules
+         */
+        foreach ($this->external_modules as $module_name => $module_url) {
+            if (!$this->modules->isInstalled($module_name)) {
+                $message = $this->helper_classes->downloadInstall($module_name, $module_url);
+                if ($message !== true) $this->error($message);
+            }
+        }
+
+        /**
+         * create fields
+         */
+        foreach ($this->fields_array as $field_array) {
+            $this->helper_fields->createFields($field_array);
+        }
+
+        /**
+         * create / copy section files
+         */
+        foreach ($this->sections as $section) {
+            $file = $this->config->paths->WesanoxCareer . 'src/includes/' . $section . '.php';
+            $file_target = $this->config->paths->templates . 'includes/career/' . $section  . '.php';
+
+            if(!is_dir($this->config->paths->templates . 'includes/')) {
+                $this->files->mkdir($this->config->paths->templates . 'includes/');
+                $this->files->mkdir($this->config->paths->templates . 'includes/career/');
+            } elseif(!is_dir($this->config->paths->templates . 'includes/career/')) {
+                $this->files->mkdir($this->config->paths->templates . 'includes/career/');
+            }
+
+            if (!is_file($file_target)) {
+                $this->files->copy($file, $file_target);
+            }
+        }
+
+        /**
+         * add Matrix item and copy item files
+         */
+        $this->addMatrixItem($this->fields);
+
+        foreach ($this->matrix_basic_items as $item) {
+            $matrix_file = $this->config->paths->WesanoxCareer . 'src/fields/' . $item . '/' .  $item . '.php';
+            $target_file = $this->config->paths->templates . 'fields/matrix_basic/' . $item . '/' . $item . '.php';
+            $target_dir = dirname($target_file);
+
+            if(!is_dir($target_dir)) {
+                $this->files->mkdir($target_dir, true);
+            }
+
+            if (!is_file($target_file)) {
+                $this->files->copy($matrix_file, $target_file);
+            }
+        }
+
+        /**
+         * create / copy template files and add fields
+         */
+        foreach ($this->templates_career as $template_career) {
+            $file = $this->config->paths->WesanoxCareer . 'src/templates/template_' . $template_career . '.php';
+            $file_target = $this->config->paths->templates . 'template_' . $template_career . '.php';
+
+            if (!is_file($file_target)) {
+                $this->files->copy($file, $file_target);
+            }
+
+            if ( !$this->templates->get('template_' . $template_career) ) {
+                $fg = new Fieldgroup();
+                $fg->name = 'template_' . $template_career;
+                $fg->add('title');
+                $fg->add('fieldset_header_career');
+                $fg->add('image');
+                $fg->add('image_tablet');
+                $fg->add('image_mobile');
+                $fg->add('fieldset_header_career_END');
+
+                $fg->add('fieldset_content_career');
+                $fg->add('headline');
+                $fg->add('headline_tags');
+                $fg->add('headline_class');
+                $fg->add('headline_align');
+                $fg->add('text');
+                $fg->add('fieldset_content_career_END');
+                $fg->add('fieldset_footer_career');
+                $fg->add('matrix_basic');
+                $fg->add('fieldset_footer_career_END');
+
+                if ( $template_career === 'career' ) {
+                    $fg->add('tab_menu');
+                    $fg->add('matrix_menu');
+                    $fg->add('tab_menu_END');
+                }
+
+                if ( $template_career === 'career_job' ) {
+                    $fg->add('fieldset_settings_job');
+                    $fg->add('link_extern');
+                    $fg->add('text_published');
+                    $fg->add('fieldset_settings_job_END');
+                }
+
+                $fg->save();
+
+                $t = new Template();
+                $t->name = 'template_' . $template_career;
+                $t->label = ucfirst( str_replace( '_', ' ', $template_career ) );
+                $t->fieldgroup = $fg;
+
+                if ( $template_career === 'career' ) {
+                    $t->noParents = -1;
+                }
+
+                $t->icon = 'users';
+                $t->tags = 'Career';
+                $t->save();
+            }
+
+        }
+    }
+
+    public function ___uninstall(): void
+    {
+        /**
+         * delete sections
+         */
+        foreach ($this->sections as $section) {
+            $file = $this->config->paths->templates . 'includes/career/' . $section  . '.php';
+
+            if (is_file($file)) {
+                $this->files->unlink($file);
+            }
+        }
+
+        /**
+         * delete template files
+         */
+        foreach ($this->templates_career as $template_career) {
+            $template_career = 'template_' . $template_career;
+            $file = $this->config->paths->templates . $template_career . '.php';
+
+            if (is_file($file)) {
+                $this->files->unlink($file);
+            }
+
+            if ( $this->templates->get($template_career) ) {
+                $t = $this->fieldgroups->get($template_career);
+                $t->deleteAll();
+                $t->save();
+
+                $this->templates->delete($this->templates->get($template_career));
+            }
+        }
+
+        /**
+         * delete fields
+         */
+        $this->helper_fields->deleteFields($this->fields_array, 'matrix_basic', $this->matrix_basic_items);
+    }
+
+    /**
+     * @param $fields
+     * @return void
+     */
+    private function addMatrixItem($fields): void
+    {
+        /**
+         * Add new item to matrix_content
+         */
+        if($fields->get('matrix_basic')) {
+            $id_text_lottery_key = $fields->get('text')->id;
+
+            $f = $fields->get('matrix_basic');
+
+            $matrix_template = $f->type->getMatrixTemplate($f);
+
+            $key = $this->helper_fields->getMatrixKey('matrix_content') + 1;
+
+            $f->setArray([
+                "matrix{$key}_name"   => 'basic_teaser_career',
+                "matrix{$key}_label"  => 'Karriere Teaser',
+                "matrix{$key}_head"   => '{matrix_label} [• {matrix_summary}]',
+                "matrix{$key}_fields" => [
+                    3 => $id_text_lottery_key,
+                ],
+                "matrix{$key}_sort"   => $key,
+            ]);
+
+            $f->save();
+
+            $matrix_template->fieldgroup->add('text');
+            $matrix_template->fieldgroup->save();
+
+            $matrix_template->save();
+        }
+    }
+}
