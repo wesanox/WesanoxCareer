@@ -260,7 +260,12 @@ class WesanoxCareer extends WireData implements Module
          * Add new item to matrix_content
          */
         if($fields->get('matrix_basic')) {
-            $id_text_lottery_key = $fields->get('text_count_items')->id;
+            $id_headline = $fields->get('headline')->id;
+            $id_headline_tags = $fields->get('headline_tags')->id;
+            $id_headline_class = $fields->get('headline_class')->id;
+            $id_headline_align = $fields->get('headline_align')->id;
+            $id_text = $fields->get('text')->id;
+            $id_text_count_items = $fields->get('text_count_items')->id;
 
             $f = $fields->get('matrix_basic');
 
@@ -273,13 +278,23 @@ class WesanoxCareer extends WireData implements Module
                 "matrix{$key}_label"  => 'Karriere Teaser',
                 "matrix{$key}_head"   => '{matrix_label} [• {matrix_summary}]',
                 "matrix{$key}_fields" => [
-                    3 => $id_text_lottery_key,
+                    1 => $id_headline,
+                    2 => $id_headline_tags,
+                    3 => $id_headline_class,
+                    4 => $id_headline_align,
+                    5 => $id_text,
+                    6 => $id_text_count_items,
                 ],
                 "matrix{$key}_sort"   => $key,
             ]);
 
             $f->save();
 
+            $matrix_template->fieldgroup->add('headline');
+            $matrix_template->fieldgroup->add('headline_tags');
+            $matrix_template->fieldgroup->add('headline_class');
+            $matrix_template->fieldgroup->add('headline_align');
+            $matrix_template->fieldgroup->add('text');
             $matrix_template->fieldgroup->add('text_count_items');
             $matrix_template->fieldgroup->save();
 
