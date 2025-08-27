@@ -260,7 +260,7 @@ class WesanoxCareer extends WireData implements Module
          * Add new item to matrix_content
          */
         if($fields->get('matrix_basic')) {
-            $id_text_lottery_key = $fields->get('text')->id;
+            $id_text_lottery_key = $fields->get('text_count_items')->id;
 
             $f = $fields->get('matrix_basic');
 
@@ -280,7 +280,7 @@ class WesanoxCareer extends WireData implements Module
 
             $f->save();
 
-            $matrix_template->fieldgroup->add('text');
+            $matrix_template->fieldgroup->add('text_count_items');
             $matrix_template->fieldgroup->save();
 
             $matrix_template->save();

@@ -11,6 +11,15 @@ return [
         'formatter' => 'TextformatterEntities'
     ],
     [
+        'name' => 'text_count_items',
+        'type' => 'Text',
+        'label' => 'Wieviel Stellen sollen maximal ausgegeben werden?',
+        'tags' => 'text',
+        'icon' => 'File text o',
+        'width' => 100,
+        'formatter' => 'TextformatterEntities'
+    ],
+    [
         'name' => 'fieldset_header_career',
         'type' => 'FieldsetOpen',
         'label' => 'Header Career',
